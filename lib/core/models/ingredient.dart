@@ -19,6 +19,10 @@ class Ingredient {
       type: json['strType'] as String?,
     );
   }
+
+  static List<Ingredient> fromJsonList(List<dynamic> jsonList) {
+    return jsonList.map((json) => Ingredient.fromJson(json)).toList();
+  }
 }
 
 extension IngredientImageExtension on Ingredient {

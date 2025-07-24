@@ -8,4 +8,8 @@ class Area {
       name: json['strArea'] as String,
     );
   }
+
+  static List<Area> fromJsonList(List<dynamic> jsonList) {
+    return jsonList.map((json) => Area.fromJson(json)).toList();
+  }
 }
