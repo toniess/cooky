@@ -19,4 +19,8 @@ class Category {
       description: json['strCategoryDescription'] as String,
     );
   }
+
+  static List<Category> fromJsonList(List<dynamic> jsonList) {
+    return jsonList.map((json) => Category.fromJson(json)).toList();
+  }
 }

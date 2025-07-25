@@ -50,6 +50,10 @@ class Meal {
       ingredients: ingredients,
     );
   }
+
+  static List<Meal> fromJsonList(List<dynamic> jsonList) {
+    return jsonList.map((json) => Meal.fromJson(json)).toList();
+  }
 }
 
 class MealIngredient {
