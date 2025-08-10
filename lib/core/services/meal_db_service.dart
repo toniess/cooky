@@ -4,27 +4,36 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // todo review methods and dounble check
 class MealDbService {
-  static final String apiKey = dotenv.env['API_KEY'] ?? '1'; // fallback to free api key
-  static final String baseUrl = 'https://www.themealdb.com/api/json/v1/$apiKey';
+  static final String apiKey = dotenv.env['THEMEALDB_API_KEY'] ?? '1';
+  static final String baseUrl = 'https://www.themealdb.com/api/json/v2/$apiKey';
   final Dio _dio;
 
   MealDbService({Dio? dio}) : _dio = dio ?? Dio();
 
   /// Search meal by name
   Future<List<Meal>> searchMealsByName(String name) async {
-    final response = await _dio.get('$baseUrl/search.php', queryParameters: {'s': name});
+    final response = await _dio.get(
+      '$baseUrl/search.php',
+      queryParameters: {'s': name},
+    );
     return Meal.fromJsonList(response.data['meals']);
   }
 
   /// List all meals by first letter
   Future<List<Meal>> searchMealsByFirstLetter(String letter) async {
-    final response = await _dio.get('$baseUrl/search.php', queryParameters: {'f': letter});
+    final response = await _dio.get(
+      '$baseUrl/search.php',
+      queryParameters: {'f': letter},
+    );
     return Meal.fromJsonList(response.data['meals']);
   }
 
   /// Lookup full meal details by ID
   Future<Meal?> lookupMealById(String id) async {
-    final response = await _dio.get('$baseUrl/lookup.php', queryParameters: {'i': id});
+    final response = await _dio.get(
+      '$baseUrl/lookup.php',
+      queryParameters: {'i': id},
+    );
     final meals = Meal.fromJsonList(response.data['meals']);
     return meals.isNotEmpty ? meals.first : null;
   }
@@ -51,38 +60,58 @@ class MealDbService {
   /// List all Categories
   @Deprecated('Use getCategories instead')
   Future<List<String>> listCategories() async {
-    final response = await _dio.get('$baseUrl/list.php', queryParameters: {'c': 'list'});
-    return (response.data['meals'] as List).map<String>((e) => e['strCategory'] as String).toList();
+    final response = await _dio.get(
+      '$baseUrl/list.php',
+      queryParameters: {'c': 'list'},
+    );
+    return (response.data['meals'] as List)
+        .map<String>((e) => e['strCategory'] as String)
+        .toList();
   }
 
   /// List all Areas
   Future<List<Area>> listAreas() async {
-    final response = await _dio.get('$baseUrl/list.php', queryParameters: {'a': 'list'});
+    final response = await _dio.get(
+      '$baseUrl/list.php',
+      queryParameters: {'a': 'list'},
+    );
     return Area.fromJsonList(response.data['meals']);
   }
 
   /// List all Ingredients
   Future<List<Ingredient>> listIngredients() async {
-    final response = await _dio.get('$baseUrl/list.php', queryParameters: {'i': 'list'});
+    final response = await _dio.get(
+      '$baseUrl/list.php',
+      queryParameters: {'i': 'list'},
+    );
     return Ingredient.fromJsonList(response.data['meals']);
   }
 
   /// Filter by ingredients
   Future<List<Meal>> filterByIngredient(List<Ingredient> ingredients) async {
     final ingredientsQuery = ingredients.map((e) => e.name).join(',');
-    final response = await _dio.get('$baseUrl/filter.php', queryParameters: {'i': ingredientsQuery});
+    final response = await _dio.get(
+      '$baseUrl/filter.php',
+      queryParameters: {'i': ingredientsQuery},
+    );
     return Meal.fromJsonList(response.data['meals']);
   }
 
   /// Filter by Category
   Future<List<Meal>> filterByCategory(Category category) async {
-    final response = await _dio.get('$baseUrl/filter.php', queryParameters: {'c': category.name});
+    final response = await _dio.get(
+      '$baseUrl/filter.php',
+      queryParameters: {'c': category.name},
+    );
     return Meal.fromJsonList(response.data['meals']);
   }
 
   /// Filter by Area
   Future<List<Meal>> filterByArea(Area area) async {
-    final response = await _dio.get('$baseUrl/filter.php', queryParameters: {'a': area.name});
+    final response = await _dio.get(
+      '$baseUrl/filter.php',
+      queryParameters: {'a': area.name},
+    );
     return Meal.fromJsonList(response.data['meals']);
   }
 }
