@@ -38,13 +38,13 @@ class MainNavigationShell extends StatelessWidget {
     return BottomNavigationBarItem(icon: Icon(icon), label: '');
   }
 
-  int _getIndex(String path) => switch (path) {
-    '/favourite' => 0,
-    '/home' => 1,
-    '/settings' => 2,
-    _ => 0,
-  };
+  int _getIndex(String path) {
+    if (path.contains('/favourite')) return 0;
+    if (path.contains('/recipes')) return 1;
+    if (path.contains('/settings')) return 2;
+    return 0;
+  }
 
   void _onTap(BuildContext context, int index) =>
-      context.go(['/favourite', '/home', '/settings'][index]);
+      context.go(['/favourite', '/recipes', '/settings'][index]);
 }

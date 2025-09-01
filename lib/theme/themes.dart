@@ -6,21 +6,28 @@ final lightTheme = ThemeData(
   brightness: Brightness.light,
   colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF7E4D41)),
   textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme),
-  scaffoldBackgroundColor: AppColors.neutralGrayLight,
+  scaffoldBackgroundColor: Colors.white,
   useMaterial3: true,
   splashFactory: NoSplash.splashFactory,
   //
   appBarTheme: AppBarTheme(
     backgroundColor: AppColors.accentBrown,
     foregroundColor: Colors.white,
-    titleTextStyle: GoogleFonts.inter(fontSize: 36, fontWeight: FontWeight.w900).copyWith(color: Colors.white),
+    titleTextStyle: GoogleFonts.inter(
+      fontSize: 36,
+      fontWeight: FontWeight.w900,
+    ).copyWith(color: Colors.white),
     centerTitle: false,
     // toolbarHeight: 100,
   ),
   //
   bottomNavigationBarTheme: BottomNavigationBarThemeData(
+    backgroundColor: AppColors.fieldBackground,
     selectedIconTheme: IconThemeData(size: 55, color: AppColors.accentBrown),
-    unselectedIconTheme: IconThemeData(size: 46, color: AppColors.neutralGrayMedium),
+    unselectedIconTheme: IconThemeData(
+      size: 46,
+      color: AppColors.neutralGrayMedium,
+    ),
   ),
   //
 );

@@ -8,18 +8,23 @@ class SearchBarDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => 60;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return Container(
-      color: AppColors.accentBrown,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      alignment: Alignment.bottomCenter,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(color: AppColors.accentBrown),
       child: TextField(
         decoration: InputDecoration(
           contentPadding: EdgeInsets.zero,
-          hintText: 'Поиск...',
-          prefixIcon: Icon(Icons.search),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          hintText: 'Search for recipes',
+          prefixIcon: Icon(Icons.search, color: AppColors.neutralGrayDark),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
           filled: true,
+          fillColor: Colors.white,
         ),
       ),
     );

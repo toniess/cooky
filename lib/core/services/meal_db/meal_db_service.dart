@@ -1,9 +1,10 @@
 import 'package:cooky/core/models/models.dart';
+import 'package:cooky/core/services/meal_db/abstract_meal_db_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // todo review methods and dounble check
-class MealDbService {
+class MealDbService implements AbstractMealDbService {
   static final String apiKey = dotenv.env['THEMEALDB_API_KEY'] ?? '1';
   static final String baseUrl = 'https://www.themealdb.com/api/json/v2/$apiKey';
   final Dio _dio;
@@ -46,6 +47,7 @@ class MealDbService {
   }
 
   /// Lookup 10 random meals (Premium)
+  @override
   Future<List<Meal>> randomSelection() async {
     final response = await _dio.get('$baseUrl/randomselection.php');
     return Meal.fromJsonList(response.data['meals']);

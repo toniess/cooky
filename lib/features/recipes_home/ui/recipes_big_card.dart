@@ -1,6 +1,7 @@
 import 'package:cooky/core/models/meal.dart';
 import 'package:cooky/theme/colors.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class RecipeBigCard extends StatelessWidget {
   final Meal meal;
@@ -8,19 +9,95 @@ class RecipeBigCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      width: double.infinity,
-      height: 200,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+    return GestureDetector(
+      onTap: () => context.go('/recipes/${meal.id}'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: _buildCardContentTest1(context),
       ),
-      clipBehavior: Clip.hardEdge,
-      child: _buildCardContentTest2(context),
+    );
+
+    // return Container(
+    //   margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+    //   width: double.infinity,
+    //   height: 200,
+    //   decoration: BoxDecoration(
+    //     color: Colors.white,
+    //     borderRadius: BorderRadius.circular(10),
+    //   ),
+    //   clipBehavior: Clip.hardEdge,
+    //   child: _buildCardContentTest2(context),
+    // );
+  }
+
+  Widget _buildCardContentTest1(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: Column(
+        children: [
+          SizedBox(
+            width: double.infinity,
+            height: 180,
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Hero(
+                    tag: meal.id,
+                    child: Image.network(
+                      meal.thumbnail,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.center,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.neutralGrayLight,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                Positioned(top: 12, right: 12, child: _FavoriteButton()),
+              ],
+            ),
+          ),
+          Container(
+            width: double.infinity,
+            height: 70,
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: 12),
+                Text(
+                  meal.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
+                  ),
+                ),
+                Text(
+                  "${meal.area} • ${meal.category}",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
+  // ignore: unused_element
   Widget _buildCardContentTest2(BuildContext context) {
     return Stack(
       children: [
@@ -79,16 +156,37 @@ class RecipeBigCard extends StatelessWidget {
             ),
           ),
         ),
-        Positioned(
-          top: 16,
-          right: 16,
-          child: Icon(
-            Icons.favorite,
-            size: 30,
-            color: AppColors.neutralGrayLight,
-          ),
-        ),
+        Positioned(top: 16, right: 16, child: _FavoriteButton()),
       ],
+    );
+  }
+}
+
+class _FavoriteButton extends StatelessWidget {
+  const _FavoriteButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {},
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey.withValues(alpha: 0.0),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.4),
+              blurRadius: 20,
+              offset: Offset(0, -5),
+            ),
+          ],
+        ),
+        child: Icon(
+          Icons.favorite,
+          size: 30,
+          color: Colors.white.withValues(alpha: 0.7),
+        ),
+      ),
     );
   }
 }

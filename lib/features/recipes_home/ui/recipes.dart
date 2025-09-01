@@ -15,11 +15,25 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     final recipesBloc = context.read<RecipesBloc>();
     recipesBloc.add(RecipesLoad());
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >
+          _scrollController.position.maxScrollExtent - 30) {
+        recipesBloc.add(RecipesLoadMore());
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -38,27 +52,14 @@ class _HomeScreenState extends State<HomeScreen> {
           recipesBloc.add(RecipesRefresh());
         },
         child: CustomScrollView(
+          controller: _scrollController,
           slivers: [
             SliverPersistentHeader(
               pinned: false,
               floating: true,
               delegate: SearchBarDelegate(),
             ),
-            SliverToBoxAdapter(child: SizedBox(height: 10)),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  'Collections',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.accentBrown,
-                    fontSize: 30,
-                  ),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(child: SizedBox(height: 10)),
+            SliverToBoxAdapter(child: SizedBox(height: 16)),
             BlocBuilder<RecipesBloc, RecipesState>(
               bloc: recipesBloc,
               builder: (context, state) {

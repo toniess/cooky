@@ -29,11 +29,16 @@ class Meal {
     for (int i = 1; i <= 20; i++) {
       final ingredient = json['strIngredient$i'];
       final measure = json['strMeasure$i'];
-      if (ingredient != null && ingredient.toString().isNotEmpty && measure != null && measure.toString().isNotEmpty) {
-        ingredients.add(MealIngredient(
-          name: ingredient.toString(),
-          measure: measure.toString(),
-        ));
+      if (ingredient != null &&
+          ingredient.toString().isNotEmpty &&
+          measure != null &&
+          measure.toString().isNotEmpty) {
+        ingredients.add(
+          MealIngredient(
+            name: ingredient.toString(),
+            measure: measure.toString(),
+          ),
+        );
       }
     }
 
@@ -54,14 +59,35 @@ class Meal {
   static List<Meal> fromJsonList(List<dynamic> jsonList) {
     return jsonList.map((json) => Meal.fromJson(json)).toList();
   }
+
+  // only for poor api, need to improve later
+  String get formattedInstructions {
+    if (instructions.contains('STEP')) {
+      final formattedInstructions = instructions.trim().replaceAll(
+        'STEP',
+        '\n    STEP',
+      );
+      return '    ${formattedInstructions.trim()}';
+    }
+    final lines = instructions.trim().split('\n');
+    for (int i = 0; i < lines.length; i++) {
+      lines[i] = '${i + 1}. ${lines[i]}';
+    }
+    final formattedLines = lines
+        .map((line) {
+          if (line.startsWith('-')) {
+            return line;
+          }
+          return '    $line';
+        })
+        .join('\n\n');
+    return formattedLines;
+  }
 }
 
 class MealIngredient {
   final String name;
   final String measure;
 
-  MealIngredient({
-    required this.name,
-    required this.measure,
-  });
+  MealIngredient({required this.name, required this.measure});
 }
