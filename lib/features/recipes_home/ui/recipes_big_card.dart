@@ -1,5 +1,6 @@
 import 'package:cooky/core/models/meal.dart';
 import 'package:cooky/core/services/favorites/favorites.dart';
+import 'package:cooky/main.dart';
 import 'package:cooky/theme/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -174,7 +175,7 @@ class _FavoriteButton extends StatefulWidget {
 }
 
 class _FavoriteButtonState extends State<_FavoriteButton> {
-  late FavoritesService _favoritesService;
+  final _favoritesService = getIt<AbstractFavoritesService>();
   bool _isFavorite = false;
   bool _isLoading = false;
 

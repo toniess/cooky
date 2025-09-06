@@ -21,6 +21,7 @@ class RecipeAppBar extends StatefulWidget {
 }
 
 class _RecipeAppBarState extends State<RecipeAppBar> {
+  final _favoriteService = getIt<AbstractFavoritesService>();
   bool _isFavorite = false;
   double _titleOpacity = 0.0;
 
@@ -41,9 +42,7 @@ class _RecipeAppBarState extends State<RecipeAppBar> {
 
   Future<void> _checkFavoriteStatus() async {
     try {
-      final isFavorite = await getIt<AbstractFavoritesService>().isFavorite(
-        widget.meal.id,
-      );
+      final isFavorite = await _favoriteService.isFavorite(widget.meal.id);
       if (mounted) {
         setState(() {
           _isFavorite = isFavorite;
@@ -55,13 +54,11 @@ class _RecipeAppBarState extends State<RecipeAppBar> {
   }
 
   Future<void> _toggleFavorite() async {
-    final favoriteService = getIt<AbstractFavoritesService>();
-
     try {
       if (_isFavorite) {
-        await favoriteService.removeFromFavorites(widget.meal.id);
+        await _favoriteService.removeFromFavorites(widget.meal.id);
       } else {
-        await favoriteService.addToFavorites(widget.meal);
+        await _favoriteService.addToFavorites(widget.meal);
       }
 
       if (mounted) {
