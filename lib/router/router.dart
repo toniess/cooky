@@ -1,5 +1,5 @@
 import 'package:cooky/features/features.dart';
-import 'package:cooky/features/recipes_home/ui/recipe.dart';
+import 'package:cooky/features/recipe/ui/recipe.dart';
 import 'package:cooky/main.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -17,7 +17,7 @@ final router = GoRouter(
         GoRoute(
           path: '/favourite',
           pageBuilder: (context, state) =>
-              NoTransitionPage(child: Scaffold(body: Text('Favourite'))),
+              NoTransitionPage(child: FavoritesScreen()),
         ),
         GoRoute(
           path: '/recipes',
@@ -33,6 +33,12 @@ final router = GoRouter(
               },
             ),
           ],
+        ),
+
+        GoRoute(
+          path: '/cart',
+          pageBuilder: (context, state) =>
+              NoTransitionPage(child: Scaffold(body: Text('Cart'))),
         ),
         GoRoute(
           path: '/settings',

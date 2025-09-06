@@ -30,6 +30,7 @@ class MealDbService implements AbstractMealDbService {
   }
 
   /// Lookup full meal details by ID
+  @override
   Future<Meal?> lookupMealById(String id) async {
     final response = await _dio.get(
       '$baseUrl/lookup.php',
@@ -100,20 +101,64 @@ class MealDbService implements AbstractMealDbService {
   }
 
   /// Filter by Category
-  Future<List<Meal>> filterByCategory(Category category) async {
+  Future<List<MealShort>> filterByCategory(Category category) async {
     final response = await _dio.get(
       '$baseUrl/filter.php',
       queryParameters: {'c': category.name},
     );
-    return Meal.fromJsonList(response.data['meals']);
+    return MealShort.fromJsonList(response.data['meals']);
   }
 
   /// Filter by Area
-  Future<List<Meal>> filterByArea(Area area) async {
+  Future<List<MealShort>> filterByArea(Area area) async {
     final response = await _dio.get(
       '$baseUrl/filter.php',
       queryParameters: {'a': area.name},
     );
-    return Meal.fromJsonList(response.data['meals']);
+    return MealShort.fromJsonList(response.data['meals']);
+  }
+
+  /// Get filtered recipes with pagination
+  @override
+  Future<List<MealShort>> getFilteredRecipes({
+    Category? category,
+    Area? area,
+    int page = 1,
+    int limit = 10,
+  }) async {
+    List<MealShort> allRecipes = [];
+
+    if (category != null) {
+      final categoryRecipes = await filterByCategory(category);
+      allRecipes.addAll(categoryRecipes);
+    }
+
+    if (area != null) {
+      final areaRecipes = await filterByArea(area);
+      allRecipes.addAll(areaRecipes);
+    }
+
+    allRecipes.shuffle();
+
+    final startIndex = (page - 1) * limit;
+    final endIndex = startIndex + limit;
+
+    if (startIndex >= allRecipes.length) {
+      return [];
+    }
+
+    return allRecipes.sublist(
+      startIndex,
+      endIndex > allRecipes.length ? allRecipes.length : endIndex,
+    );
+  }
+
+  @override
+  Future<Category> getCategoryByName(String name) async {
+    final response = await _dio.get(
+      '$baseUrl/filter.php',
+      queryParameters: {'c': name},
+    );
+    return Category.fromJsonList(response.data['categories']).first;
   }
 }

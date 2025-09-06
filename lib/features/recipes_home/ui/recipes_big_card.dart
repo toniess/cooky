@@ -1,4 +1,5 @@
 import 'package:cooky/core/models/meal.dart';
+import 'package:cooky/core/services/favorites/favorites.dart';
 import 'package:cooky/theme/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -41,24 +42,25 @@ class RecipeBigCard extends StatelessWidget {
             child: Stack(
               children: [
                 Positioned.fill(
-                  child: Hero(
-                    tag: meal.id,
-                    child: Image.network(
-                      meal.thumbnail,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.center,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Center(
-                          child: CircularProgressIndicator(
-                            color: AppColors.neutralGrayLight,
-                          ),
-                        );
-                      },
-                    ),
+                  child: Image.network(
+                    meal.thumbnail,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.neutralGrayLight,
+                        ),
+                      );
+                    },
                   ),
                 ),
-                Positioned(top: 12, right: 12, child: _FavoriteButton()),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: _FavoriteButton(meal: meal),
+                ),
               ],
             ),
           ),
@@ -156,19 +158,90 @@ class RecipeBigCard extends StatelessWidget {
             ),
           ),
         ),
-        Positioned(top: 16, right: 16, child: _FavoriteButton()),
+        Positioned(top: 16, right: 16, child: _FavoriteButton(meal: meal)),
       ],
     );
   }
 }
 
-class _FavoriteButton extends StatelessWidget {
-  const _FavoriteButton();
+class _FavoriteButton extends StatefulWidget {
+  final Meal meal;
+
+  const _FavoriteButton({required this.meal});
+
+  @override
+  State<_FavoriteButton> createState() => _FavoriteButtonState();
+}
+
+class _FavoriteButtonState extends State<_FavoriteButton> {
+  late FavoritesService _favoritesService;
+  bool _isFavorite = false;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFavoriteStatus();
+  }
+
+  @override
+  void didUpdateWidget(covariant _FavoriteButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.meal.id != widget.meal.id) {
+      _checkFavoriteStatus();
+    }
+  }
+
+  Future<void> _checkFavoriteStatus() async {
+    try {
+      final isFavorite = await _favoritesService.isFavorite(widget.meal.id);
+      if (mounted) {
+        setState(() {
+          _isFavorite = isFavorite;
+        });
+      }
+    } catch (e) {
+      // Обработка ошибки
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (_isLoading) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      if (_isFavorite) {
+        await _favoritesService.removeFromFavorites(widget.meal.id);
+      } else {
+        await _favoritesService.addToFavorites(widget.meal);
+      }
+
+      if (mounted) {
+        setState(() {
+          _isFavorite = !_isFavorite;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        // Показать ошибку пользователю
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {},
+      onTap: _toggleFavorite,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.grey.withValues(alpha: 0.0),
@@ -177,15 +250,32 @@ class _FavoriteButton extends StatelessWidget {
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.4),
               blurRadius: 20,
-              offset: Offset(0, -5),
+              offset: const Offset(0, -5),
             ),
           ],
         ),
-        child: Icon(
-          Icons.favorite,
-          size: 30,
-          color: Colors.white.withValues(alpha: 0.7),
-        ),
+        child: _isLoading
+            ? const SizedBox(
+                width: 30,
+                height: 30,
+                child: Center(
+                  child: SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              )
+            : Icon(
+                _isFavorite ? Icons.favorite : Icons.favorite_border,
+                size: 30,
+                color: _isFavorite
+                    ? AppColors.errorRed
+                    : Colors.white.withValues(alpha: 0.7),
+              ),
       ),
     );
   }

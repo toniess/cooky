@@ -24,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
     recipesBloc.add(RecipesLoad());
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >
-          _scrollController.position.maxScrollExtent - 30) {
+          _scrollController.position.maxScrollExtent + 100) {
         recipesBloc.add(RecipesLoadMore());
       }
     });

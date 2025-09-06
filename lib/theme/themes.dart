@@ -23,11 +23,16 @@ final lightTheme = ThemeData(
   //
   bottomNavigationBarTheme: BottomNavigationBarThemeData(
     backgroundColor: AppColors.fieldBackground,
-    selectedIconTheme: IconThemeData(size: 55, color: AppColors.accentBrown),
+    selectedIconTheme: IconThemeData(size: 50, color: AppColors.accentBrown),
     unselectedIconTheme: IconThemeData(
-      size: 46,
+      size: 40,
       color: AppColors.neutralGrayMedium,
     ),
+  ),
+  floatingActionButtonTheme: FloatingActionButtonThemeData(
+    backgroundColor: AppColors.accentBrown,
+    foregroundColor: Colors.white,
+    elevation: 4,
   ),
   //
 );

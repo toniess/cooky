@@ -1,5 +1,5 @@
-import 'package:cooky/core/repositpries/abstract_repository.dart';
-import 'package:cooky/core/repositpries/repository.dart';
+import 'package:cooky/core/services/favorites/favorites.dart';
+import 'package:cooky/core/services/meal_db/abstract_meal_db_service.dart';
 import 'package:cooky/core/services/meal_db/meal_db_service.dart';
 import 'package:cooky/features/recipes_home/bloc/recipes/recipes_bloc.dart';
 import 'package:cooky/router/router.dart';
@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:talker_bloc_logger/talker_bloc_logger_observer.dart';
 import 'package:talker_dio_logger/talker_dio_logger.dart';
 import 'package:talker_flutter/talker_flutter.dart';
@@ -25,16 +26,27 @@ void _registerServices() {
   dio.options.receiveTimeout = const Duration(seconds: 5);
   dio.interceptors.add(TalkerDioLogger(talker: talker));
 
-  getIt.registerLazySingleton<AbstractRepository>(() {
-    final mealDbService = MealDbService(dio: dio);
-    return Repository(mealDbService: mealDbService);
+  getIt.registerLazySingleton<AbstractMealDbService>(() {
+    return MealDbService(dio: dio);
+  });
+
+  getIt.registerLazySingleton<AbstractFavoritesService>(() {
+    return FavoritesService();
   });
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
+
   _registerServices();
+
+  // Инициализация Hive
+  await Hive.initFlutter();
+
+  // Инициализация сервиса избранных
+  await getIt<AbstractFavoritesService>().init();
+
   Bloc.observer = TalkerBlocObserver(talker: talker);
 
   runApp(MyApp());

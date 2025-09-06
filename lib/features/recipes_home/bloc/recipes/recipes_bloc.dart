@@ -1,5 +1,6 @@
+import 'package:cooky/core/models/category.dart';
 import 'package:cooky/core/models/meal.dart';
-import 'package:cooky/core/repositpries/abstract_repository.dart';
+import 'package:cooky/core/services/meal_db/abstract_meal_db_service.dart';
 import 'package:cooky/core/utils/extentions.dart';
 import 'package:cooky/main.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,7 +9,7 @@ import 'recipes_event.dart';
 import 'recipes_state.dart';
 
 class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
-  final _repository = getIt.get<AbstractRepository>();
+  final _repository = getIt.get<AbstractMealDbService>();
 
   RecipesBloc() : super(RecipesInitial()) {
     on<RecipesLoad>((event, emit) async {
@@ -49,7 +50,16 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
     });
   }
 
-  Meal? getMealById(String id) {
-    return state.recipes.firstWhereOrNull((meal) => meal.id == id);
+  Future<Meal?> getMealById(String id) async {
+    final meal = state.recipes.firstWhereOrNull((meal) => meal.id == id);
+    if (meal == null) {
+      final meal = await _repository.lookupMealById(id);
+      return meal;
+    }
+    return meal;
+  }
+
+  Future<Category> getCategoryByName(String name) {
+    return _repository.getCategoryByName(name);
   }
 }

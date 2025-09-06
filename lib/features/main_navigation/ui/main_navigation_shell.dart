@@ -16,13 +16,24 @@ class MainNavigationShell extends StatelessWidget {
     return Scaffold(
       body: child,
       bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: Offset(0, -10),
+            ),
+          ],
+        ),
         constraints: BoxConstraints(minHeight: 110),
         child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
           currentIndex: _getIndex(state.matchedLocation),
           onTap: (index) => _onTap(context, index),
           items: [
             buildBottomNavigationButton(Icons.favorite),
             buildBottomNavigationButton(Icons.book),
+            buildBottomNavigationButton(Icons.shopping_cart),
             buildBottomNavigationButton(Icons.settings),
           ],
           selectedFontSize: 0,
@@ -41,10 +52,12 @@ class MainNavigationShell extends StatelessWidget {
   int _getIndex(String path) {
     if (path.contains('/favourite')) return 0;
     if (path.contains('/recipes')) return 1;
-    if (path.contains('/settings')) return 2;
+    if (path.contains('/cart')) return 2;
+    if (path.contains('/settings')) return 3;
+
     return 0;
   }
 
   void _onTap(BuildContext context, int index) =>
-      context.go(['/favourite', '/recipes', '/settings'][index]);
+      context.go(['/favourite', '/recipes', '/cart', '/settings'][index]);
 }
