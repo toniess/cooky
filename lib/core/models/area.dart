@@ -3,10 +3,10 @@ class Area {
 
   Area({required this.name});
 
+  Area.named(this.name);
+
   factory Area.fromJson(Map<String, dynamic> json) {
-    return Area(
-      name: json['strArea'] as String,
-    );
+    return Area(name: json['strArea'] as String);
   }
 
   static List<Area> fromJsonList(List<dynamic> jsonList) {

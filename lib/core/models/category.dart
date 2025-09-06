@@ -11,6 +11,8 @@ class Category {
     required this.description,
   });
 
+  Category.named(this.name) : id = '0', thumbnail = '', description = '';
+
   factory Category.fromJson(Map<String, dynamic> json) {
     return Category(
       id: json['idCategory'] as String,

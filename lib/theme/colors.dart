@@ -13,6 +13,7 @@ class AppColors {
   static const neutralGrayMedium = Color(0xFFABA5A5);
   static const neutralGrayDark = Color(0xFF5C5858);
   static const fieldBackground = Color(0xFFFFFFFF);
+
   static const shimmerLight = Color(0xFFCFDBF1);
   static const shimmerMedium = Color(0xFFAFC2DE);
   static const shimmerDark = Color(0xFF8AA1C0);
