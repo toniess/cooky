@@ -1,7 +1,6 @@
 import 'package:cooky/features/features.dart';
 import 'package:cooky/features/recipe/ui/recipe.dart';
 import 'package:cooky/main.dart';
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
@@ -38,7 +37,7 @@ final router = GoRouter(
         GoRoute(
           path: '/cart',
           pageBuilder: (context, state) =>
-              NoTransitionPage(child: Scaffold(body: Text('Cart'))),
+              NoTransitionPage(child: CartScreen()),
         ),
         GoRoute(
           path: '/settings',
