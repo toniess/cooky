@@ -48,6 +48,57 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
         emit(RecipesError());
       }
     });
+
+    on<RecipesSearch>((event, emit) async {
+      if (event.query.trim().isEmpty) {
+        emit(RecipesLoaded(recipes: state.recipes));
+        return;
+      }
+
+      emit(RecipesSearching(recipes: state.recipes, searchQuery: event.query));
+      try {
+        final searchResults = await _repository.searchMealsByName(event.query);
+        emit(
+          RecipesSearchResults(
+            recipes: searchResults,
+            searchQuery: event.query,
+          ),
+        );
+      } catch (e) {
+        talker.error('SearchError: $e');
+        emit(RecipesError());
+      }
+    });
+
+    on<RecipesClearSearch>((event, emit) async {
+      emit(RecipesLoaded(recipes: state.recipes));
+    });
+
+    on<RecipesFilterByCategory>((event, emit) async {
+      emit(RecipesSearching(recipes: state.recipes, searchQuery: ''));
+      try {
+        final categories = await _repository.getCategories();
+        final category = categories.firstWhere((c) => c.id == event.categoryId);
+        final filteredRecipes = await _repository.filterByCategory(category);
+        emit(RecipesSearchResults(recipes: filteredRecipes, searchQuery: ''));
+      } catch (e) {
+        talker.error('FilterByCategory error: $e');
+        emit(RecipesError());
+      }
+    });
+
+    on<RecipesFilterByArea>((event, emit) async {
+      emit(RecipesSearching(recipes: state.recipes, searchQuery: ''));
+      try {
+        final areas = await _repository.getAreas();
+        final area = areas.firstWhere((a) => a.name == event.areaName);
+        final filteredRecipes = await _repository.filterByArea(area);
+        emit(RecipesSearchResults(recipes: filteredRecipes, searchQuery: ''));
+      } catch (e) {
+        talker.error('FilterByArea error: $e');
+        emit(RecipesError());
+      }
+    });
   }
 
   Future<Meal?> getMealById(String id) async {

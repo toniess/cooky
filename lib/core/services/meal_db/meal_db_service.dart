@@ -12,6 +12,7 @@ class MealDbService implements AbstractMealDbService {
   MealDbService({Dio? dio}) : _dio = dio ?? Dio();
 
   /// Search meal by name
+  @override
   Future<List<Meal>> searchMealsByName(String name) async {
     final response = await _dio.get(
       '$baseUrl/search.php',
@@ -55,6 +56,7 @@ class MealDbService implements AbstractMealDbService {
   }
 
   /// List all meal categories
+  @override
   Future<List<Category>> getCategories() async {
     final response = await _dio.get('$baseUrl/categories.php');
     return Category.fromJsonList(response.data['categories']);
@@ -73,12 +75,19 @@ class MealDbService implements AbstractMealDbService {
   }
 
   /// List all Areas
-  Future<List<Area>> listAreas() async {
+  @override
+  Future<List<Area>> getAreas() async {
     final response = await _dio.get(
       '$baseUrl/list.php',
       queryParameters: {'a': 'list'},
     );
     return Area.fromJsonList(response.data['meals']);
+  }
+
+  /// List all Areas (deprecated)
+  @Deprecated('Use getAreas instead')
+  Future<List<Area>> listAreas() async {
+    return getAreas();
   }
 
   /// List all Ingredients
@@ -101,21 +110,41 @@ class MealDbService implements AbstractMealDbService {
   }
 
   /// Filter by Category
-  Future<List<MealShort>> filterByCategory(Category category) async {
+  @override
+  Future<List<Meal>> filterByCategory(Category category) async {
     final response = await _dio.get(
       '$baseUrl/filter.php',
       queryParameters: {'c': category.name},
     );
-    return MealShort.fromJsonList(response.data['meals']);
+    final mealShorts = MealShort.fromJsonList(response.data['meals']);
+    // Convert MealShort to Meal by looking up full details
+    List<Meal> meals = [];
+    for (final mealShort in mealShorts) {
+      final meal = await lookupMealById(mealShort.id);
+      if (meal != null) {
+        meals.add(meal);
+      }
+    }
+    return meals;
   }
 
   /// Filter by Area
-  Future<List<MealShort>> filterByArea(Area area) async {
+  @override
+  Future<List<Meal>> filterByArea(Area area) async {
     final response = await _dio.get(
       '$baseUrl/filter.php',
       queryParameters: {'a': area.name},
     );
-    return MealShort.fromJsonList(response.data['meals']);
+    final mealShorts = MealShort.fromJsonList(response.data['meals']);
+    // Convert MealShort to Meal by looking up full details
+    List<Meal> meals = [];
+    for (final mealShort in mealShorts) {
+      final meal = await lookupMealById(mealShort.id);
+      if (meal != null) {
+        meals.add(meal);
+      }
+    }
+    return meals;
   }
 
   /// Get filtered recipes with pagination
@@ -129,13 +158,19 @@ class MealDbService implements AbstractMealDbService {
     List<MealShort> allRecipes = [];
 
     if (category != null) {
-      final categoryRecipes = await filterByCategory(category);
-      allRecipes.addAll(categoryRecipes);
+      final response = await _dio.get(
+        '$baseUrl/filter.php',
+        queryParameters: {'c': category.name},
+      );
+      allRecipes.addAll(MealShort.fromJsonList(response.data['meals']));
     }
 
     if (area != null) {
-      final areaRecipes = await filterByArea(area);
-      allRecipes.addAll(areaRecipes);
+      final response = await _dio.get(
+        '$baseUrl/filter.php',
+        queryParameters: {'a': area.name},
+      );
+      allRecipes.addAll(MealShort.fromJsonList(response.data['meals']));
     }
 
     allRecipes.shuffle();
