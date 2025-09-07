@@ -1,6 +1,9 @@
 import 'package:cooky/core/models/meal.dart';
+import 'package:cooky/features/cart/bloc/bloc.dart';
 import 'package:cooky/theme/colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 class AddToCartButton extends StatelessWidget {
   final Meal meal;
@@ -8,14 +11,24 @@ class AddToCartButton extends StatelessWidget {
   const AddToCartButton({super.key, required this.meal});
 
   void _addToCart(BuildContext context) {
-    // TODO: Implement add to cart functionality
+    context.read<CartBloc>().add(AddMealIngredientsToCart(meal));
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Added to cart!'),
+        content: Text(
+          'Added ${meal.ingredients.length} ingredients to shopping list!',
+        ),
         backgroundColor: AppColors.accentBrown,
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        action: SnackBarAction(
+          label: 'View List',
+          textColor: Colors.white,
+          onPressed: () {
+            context.go('/cart');
+          },
+        ),
       ),
     );
   }
@@ -28,7 +41,7 @@ class AddToCartButton extends StatelessWidget {
       backgroundColor: AppColors.accentBrown,
       foregroundColor: Colors.white,
       elevation: 4,
-      child: const Icon(Icons.shopping_cart_rounded, size: 24),
+      child: const Icon(Icons.list_alt_rounded, size: 24),
     );
   }
 }
