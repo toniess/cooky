@@ -1,12 +1,8 @@
 import 'package:cooky/core/models/models.dart';
-import 'package:equatable/equatable.dart';
 
 /// Базовый класс для состояний корзины
-abstract class CartState extends Equatable {
+abstract class CartState {
   const CartState();
-
-  @override
-  List<Object?> get props => [];
 }
 
 /// Начальное состояние
@@ -24,9 +20,6 @@ class CartLoaded extends CartState {
   final Cart cart;
 
   const CartLoaded(this.cart);
-
-  @override
-  List<Object?> get props => [cart];
 }
 
 /// Корзина пуста
@@ -39,7 +32,4 @@ class CartError extends CartState {
   final String message;
 
   const CartError(this.message);
-
-  @override
-  List<Object?> get props => [message];
 }

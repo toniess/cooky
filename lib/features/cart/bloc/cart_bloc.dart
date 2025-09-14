@@ -2,6 +2,7 @@ import 'package:cooky/core/models/models.dart';
 import 'package:cooky/core/services/cart/abstract_cart_service.dart';
 import 'package:cooky/features/cart/bloc/cart_event.dart';
 import 'package:cooky/features/cart/bloc/cart_state.dart';
+import 'package:cooky/main.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// BLoC для управления корзиной
@@ -38,8 +39,21 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   Future<void> _onAddToCart(AddToCart event, Emitter<CartState> emit) async {
     try {
       await _cartService.addToCart(event.item);
-      final cart = await _cartService.getCart();
-      emit(CartLoaded(cart));
+
+      // Обновляем текущее состояние
+      if (state is CartLoaded) {
+        final currentState = state as CartLoaded;
+        final updatedCart = currentState.cart.addItem(event.item);
+        emit(CartLoaded(updatedCart));
+      } else if (state is CartEmpty) {
+        // Если корзина была пуста, создаем новую корзину
+        final newCart = Cart.empty().addItem(event.item);
+        emit(CartLoaded(newCart));
+      } else {
+        // Если состояние не определено, перезагружаем
+        final cart = await _cartService.getCart();
+        emit(CartLoaded(cart));
+      }
     } catch (e) {
       emit(CartError('Failed to add item to cart: ${e.toString()}'));
     }
@@ -51,12 +65,25 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   ) async {
     try {
       await _cartService.removeFromCart(event.itemId);
-      final cart = await _cartService.getCart();
 
-      if (cart.isEmpty) {
-        emit(const CartEmpty());
+      // Обновляем текущее состояние
+      if (state is CartLoaded) {
+        final currentState = state as CartLoaded;
+        final updatedCart = currentState.cart.removeItem(event.itemId);
+
+        if (updatedCart.isEmpty) {
+          emit(const CartEmpty());
+        } else {
+          emit(CartLoaded(updatedCart));
+        }
       } else {
-        emit(CartLoaded(cart));
+        // Если состояние не определено, перезагружаем
+        final cart = await _cartService.getCart();
+        if (cart.isEmpty) {
+          emit(const CartEmpty());
+        } else {
+          emit(CartLoaded(cart));
+        }
       }
     } catch (e) {
       emit(CartError('Failed to remove item from cart: ${e.toString()}'));
@@ -96,6 +123,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   ) async {
     try {
       // Добавляем все ингредиенты рецепта в корзину
+      Cart currentCart = state is CartLoaded
+          ? (state as CartLoaded).cart
+          : Cart.empty();
+
       for (final ingredient in event.meal.ingredients) {
         final cartItem = CartItem(
           id: '${event.meal.id}_${ingredient.name}',
@@ -107,10 +138,10 @@ class CartBloc extends Bloc<CartEvent, CartState> {
           mealName: event.meal.name,
         );
         await _cartService.addToCart(cartItem);
+        currentCart = currentCart.addItem(cartItem);
       }
 
-      final cart = await _cartService.getCart();
-      emit(CartLoaded(cart));
+      emit(CartLoaded(currentCart));
     } catch (e) {
       emit(
         CartError('Failed to add meal ingredients to cart: ${e.toString()}'),
@@ -141,16 +172,47 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     Emitter<CartState> emit,
   ) async {
     try {
-      final cart = await _cartService.getCart();
-      final item = cart.getItemById(event.itemId);
+      // Обновляем текущее состояние напрямую
+      if (state is CartLoaded) {
+        final currentState = state as CartLoaded;
+        final item = currentState.cart.getItemById(event.itemId);
 
-      if (item != null) {
-        final updatedItem = item.copyWith(isPurchased: !item.isPurchased);
-        await _cartService.addToCart(updatedItem);
-        final updatedCart = await _cartService.getCart();
-        emit(CartLoaded(updatedCart));
+        if (item != null) {
+          final updatedItem = item.copyWith(isPurchased: !item.isPurchased);
+
+          // Обновляем товар в сервисе
+          await _cartService.addToCart(updatedItem);
+
+          // Обновляем корзину в состоянии
+          final updatedItems = currentState.cart.items.map((cartItem) {
+            if (cartItem.id == event.itemId) {
+              return updatedItem;
+            }
+            return cartItem;
+          }).toList();
+
+          final updatedCart = Cart(items: updatedItems);
+          talker.debug(
+            '🛒 Cart updated, total items: ${updatedCart.items.length}',
+          );
+          emit(CartLoaded(updatedCart));
+        } else {
+          talker.debug('🛒 Item not found: ${event.itemId}');
+        }
+      } else {
+        // Если состояние не определено, перезагружаем
+        final cart = await _cartService.getCart();
+        final item = cart.getItemById(event.itemId);
+
+        if (item != null) {
+          final updatedItem = item.copyWith(isPurchased: !item.isPurchased);
+          await _cartService.addToCart(updatedItem);
+          final updatedCart = await _cartService.getCart();
+          emit(CartLoaded(updatedCart));
+        }
       }
     } catch (e) {
+      talker.handle(e);
       emit(
         CartError('Failed to toggle item purchased status: ${e.toString()}'),
       );

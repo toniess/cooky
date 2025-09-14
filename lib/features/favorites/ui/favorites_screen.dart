@@ -1,5 +1,5 @@
 import 'package:cooky/core/models/meal.dart';
-import 'package:cooky/core/services/favorites/favorites_service.dart';
+import 'package:cooky/core/utils/navigation_helper.dart';
 import 'package:cooky/features/favorites/bloc/bloc.dart';
 import 'package:cooky/theme/colors.dart';
 import 'package:flutter/material.dart';
@@ -12,16 +12,24 @@ class FavoritesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          FavoritesBloc(FavoritesService())..add(LoadFavorites()),
-      child: const _FavoritesView(),
-    );
+    return const _FavoritesView();
   }
 }
 
-class _FavoritesView extends StatelessWidget {
+class _FavoritesView extends StatefulWidget {
   const _FavoritesView();
+
+  @override
+  State<_FavoritesView> createState() => _FavoritesViewState();
+}
+
+class _FavoritesViewState extends State<_FavoritesView> {
+  @override
+  void initState() {
+    super.initState();
+    // Загружаем избранные при первом открытии экрана
+    context.read<FavoritesBloc>().add(LoadFavorites());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -255,7 +263,9 @@ class _FavoriteCardState extends State<_FavoriteCard>
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: () => context.push('/recipes/${widget.meal.id}'),
+                onTap: () => context.push(
+                  NavigationHelper.getRecipePath(context, widget.meal.id),
+                ),
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
                   padding: const EdgeInsets.all(16),

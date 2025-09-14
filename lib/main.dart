@@ -1,6 +1,10 @@
+import 'package:cooky/core/services/cart/abstract_cart_service.dart';
+import 'package:cooky/core/services/cart/cart_service.dart';
 import 'package:cooky/core/services/favorites/favorites.dart';
 import 'package:cooky/core/services/meal_db/abstract_meal_db_service.dart';
 import 'package:cooky/core/services/meal_db/meal_db_service.dart';
+import 'package:cooky/features/cart/bloc/bloc.dart';
+import 'package:cooky/features/favorites/bloc/bloc.dart';
 import 'package:cooky/features/recipes_home/bloc/recipes/recipes_bloc.dart';
 import 'package:cooky/router/router.dart';
 import 'package:cooky/theme/colors.dart';
@@ -33,6 +37,10 @@ void _registerServices() {
   getIt.registerLazySingleton<AbstractFavoritesService>(() {
     return FavoritesService();
   });
+
+  getIt.registerLazySingleton<AbstractCartService>(() {
+    return CartService();
+  });
 }
 
 void main() async {
@@ -44,8 +52,9 @@ void main() async {
   // Инициализация Hive
   await Hive.initFlutter();
 
-  // Инициализация сервиса избранных
+  // Инициализация сервисов
   await getIt<AbstractFavoritesService>().init();
+  await getIt<AbstractCartService>().init();
 
   Bloc.observer = TalkerBlocObserver(talker: talker);
 
@@ -58,7 +67,15 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-      providers: [BlocProvider(create: (context) => RecipesBloc())],
+      providers: [
+        BlocProvider(create: (context) => RecipesBloc()),
+        BlocProvider(
+          create: (context) => FavoritesBloc(getIt<AbstractFavoritesService>()),
+        ),
+        BlocProvider(
+          create: (context) => CartBloc(getIt<AbstractCartService>()),
+        ),
+      ],
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle(
           systemNavigationBarColor: AppColors.fieldBackground,

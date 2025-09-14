@@ -31,9 +31,16 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Search Recipes'),
-        backgroundColor: AppColors.accentBrown,
-        foregroundColor: Colors.white,
+        title: Text(
+          'Search Recipes',
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            color: AppColors.neutralGrayDark,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: AppColors.neutralGrayDark,
+        centerTitle: true,
         elevation: 0,
       ),
       body: Column(
@@ -41,7 +48,7 @@ class _SearchScreenState extends State<SearchScreen> {
           // Search bar
           Container(
             padding: const EdgeInsets.all(16),
-            color: AppColors.accentBrown,
+            color: Colors.white,
             child: TextField(
               controller: _searchController,
               autofocus: true,

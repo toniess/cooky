@@ -1,4 +1,5 @@
 import 'package:cooky/core/models/meal.dart';
+import 'package:cooky/core/utils/navigation_helper.dart';
 import 'package:cooky/theme/colors.dart';
 import 'package:cooky/theme/text_styles.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +12,8 @@ class RecepesMiniCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push('/recipes/${meal.id}'),
+      onTap: () =>
+          context.push(NavigationHelper.getRecipePath(context, meal.id)),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,

@@ -43,14 +43,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Recipes'),
-        backgroundColor: AppColors.accentBrown,
-        foregroundColor: Colors.white,
+        title: Text(
+          'Recipes',
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            color: AppColors.neutralGrayDark,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        backgroundColor: Colors.white,
         elevation: 0,
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () => context.go('/search'),
+            icon: const Icon(Icons.search, color: AppColors.neutralGrayDark),
+            onPressed: () => context.push('/search'),
           ),
         ],
       ),
