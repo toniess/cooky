@@ -18,7 +18,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
         return;
       }
       try {
-        final recipes = await _repository.randomSelection();
+        final recipes = await _repository.latestRecipes();
         emit(RecipesLoaded(recipes: recipes));
       } catch (e) {
         talker.error('RecipesError: $e');
@@ -29,7 +29,7 @@ class RecipesBloc extends Bloc<RecipesEvent, RecipesState> {
     on<RecipesRefresh>((event, emit) async {
       emit(RecipesLoading(recipes: state.recipes));
       try {
-        final recipes = await _repository.randomSelection();
+        final recipes = await _repository.latestRecipes();
         emit(RecipesLoaded(recipes: recipes));
       } catch (e) {
         emit(RecipesError());

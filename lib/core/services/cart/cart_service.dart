@@ -25,30 +25,13 @@ class CartService implements AbstractCartService {
 
     // Открываем бокс для корзины
     _cartBox = await Hive.openBox<CartItem>(_boxName);
-
-    // Очищаем старые данные для избежания проблем с миграцией
-    try {
-      await _cartBox.clear();
-    } catch (e) {
-      // Игнорируем ошибки при очистке
-    }
   }
 
   @override
   Future<void> addToCart(CartItem item) async {
     try {
-      // Проверяем, есть ли уже такой товар в корзине
-      final existingItem = _cartBox.values
-          .where((cartItem) => cartItem.id == item.id)
-          .firstOrNull;
-
-      if (existingItem != null) {
-        // Если товар уже есть, обновляем его (включая статус покупки)
-        await _cartBox.put(item.id, item);
-      } else {
-        // Если товара нет, добавляем новый
-        await _cartBox.put(item.id, item);
-      }
+      // Просто добавляем/обновляем товар в корзине
+      await _cartBox.put(item.id, item);
     } catch (e) {
       // Если бокс не инициализирован, инициализируем его
       await init();

@@ -196,4 +196,10 @@ class MealDbService implements AbstractMealDbService {
     );
     return Category.fromJsonList(response.data['categories']).first;
   }
+
+  @override
+  Future<List<Meal>> latestRecipes() async {
+    final response = await _dio.get('$baseUrl/latest.php');
+    return Meal.fromJsonList(response.data['meals']);
+  }
 }

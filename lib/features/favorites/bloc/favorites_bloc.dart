@@ -52,8 +52,36 @@ class FavoritesBloc extends Bloc<FavoritesEvent, FavoritesState> {
     try {
       await _favoritesService.addToFavorites(event.meal);
 
-      // Перезагружаем список избранных
-      add(LoadFavorites());
+      // Обновляем текущее состояние
+      if (state is FavoritesLoaded) {
+        final currentState = state as FavoritesLoaded;
+        final updatedFavorites = [...currentState.favorites, event.meal];
+        final updatedStatus = Map<String, bool>.from(
+          currentState.favoriteStatus,
+        );
+        updatedStatus[event.meal.id] = true;
+
+        emit(
+          FavoritesLoaded(
+            favorites: updatedFavorites,
+            favoriteStatus: updatedStatus,
+          ),
+        );
+      } else if (state is FavoritesEmpty) {
+        // Если список был пуст, создаем новый список
+        final favoriteStatus = <String, bool>{};
+        favoriteStatus[event.meal.id] = true;
+
+        emit(
+          FavoritesLoaded(
+            favorites: [event.meal],
+            favoriteStatus: favoriteStatus,
+          ),
+        );
+      } else {
+        // Если состояние не определено, перезагружаем
+        add(LoadFavorites());
+      }
     } catch (e) {
       emit(FavoritesError('Ошибка добавления в избранное: $e'));
     }
@@ -67,8 +95,31 @@ class FavoritesBloc extends Bloc<FavoritesEvent, FavoritesState> {
     try {
       await _favoritesService.removeFromFavorites(event.mealId);
 
-      // Перезагружаем список избранных
-      add(LoadFavorites());
+      // Обновляем текущее состояние
+      if (state is FavoritesLoaded) {
+        final currentState = state as FavoritesLoaded;
+        final updatedFavorites = currentState.favorites
+            .where((meal) => meal.id != event.mealId)
+            .toList();
+        final updatedStatus = Map<String, bool>.from(
+          currentState.favoriteStatus,
+        );
+        updatedStatus[event.mealId] = false;
+
+        if (updatedFavorites.isEmpty) {
+          emit(FavoritesEmpty());
+        } else {
+          emit(
+            FavoritesLoaded(
+              favorites: updatedFavorites,
+              favoriteStatus: updatedStatus,
+            ),
+          );
+        }
+      } else {
+        // Если состояние не определено, перезагружаем
+        add(LoadFavorites());
+      }
     } catch (e) {
       emit(FavoritesError('Ошибка удаления из избранного: $e'));
     }

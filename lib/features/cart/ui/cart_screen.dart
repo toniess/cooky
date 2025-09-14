@@ -1,6 +1,6 @@
 import 'package:cooky/core/models/models.dart';
-import 'package:cooky/core/services/cart/cart_service.dart';
 import 'package:cooky/features/cart/bloc/bloc.dart';
+import 'package:cooky/main.dart';
 import 'package:cooky/theme/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,15 +12,24 @@ class CartScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => CartBloc(CartService())..add(const LoadCart()),
-      child: const _CartView(),
-    );
+    return const _CartView();
   }
 }
 
-class _CartView extends StatelessWidget {
+class _CartView extends StatefulWidget {
   const _CartView();
+
+  @override
+  State<_CartView> createState() => _CartViewState();
+}
+
+class _CartViewState extends State<_CartView> {
+  @override
+  void initState() {
+    super.initState();
+    // Загружаем корзину при первом открытии экрана
+    context.read<CartBloc>().add(const LoadCart());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -146,9 +155,9 @@ class _CartList extends StatefulWidget {
 }
 
 class _CartListState extends State<_CartList> with TickerProviderStateMixin {
-  late List<AnimationController> _animationControllers;
-  late List<Animation<Offset>> _slideAnimations;
-  late List<Animation<double>> _fadeAnimations;
+  List<AnimationController> _animationControllers = [];
+  List<Animation<Offset>> _slideAnimations = [];
+  List<Animation<double>> _fadeAnimations = [];
 
   @override
   void initState() {
@@ -157,6 +166,11 @@ class _CartListState extends State<_CartList> with TickerProviderStateMixin {
   }
 
   void _setupAnimations() {
+    // Освобождаем старые контроллеры анимации
+    for (final controller in _animationControllers) {
+      controller.dispose();
+    }
+
     final groupedItems = _getGroupedItems();
     _animationControllers = List.generate(
       groupedItems.length,
@@ -215,6 +229,11 @@ class _CartListState extends State<_CartList> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final groupedItems = _getGroupedItems();
 
+    // Обновляем анимации если количество групп изменилось
+    if (_animationControllers.length != groupedItems.length) {
+      _setupAnimations();
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: groupedItems.length,
@@ -222,6 +241,17 @@ class _CartListState extends State<_CartList> with TickerProviderStateMixin {
         final mealId = groupedItems.keys.elementAt(index);
         final items = groupedItems[mealId]!;
         final mealName = items.first.mealName;
+
+        // Проверяем, что индекс не выходит за границы массива анимаций
+        if (index >= _slideAnimations.length ||
+            index >= _fadeAnimations.length) {
+          return _MealGroupCard(
+            key: ValueKey(mealId),
+            mealName: mealName,
+            mealId: mealId,
+            items: items,
+          );
+        }
 
         return SlideTransition(
           position: _slideAnimations[index],
@@ -258,7 +288,7 @@ class _MealGroupCard extends StatefulWidget {
 
 class _MealGroupCardState extends State<_MealGroupCard>
     with SingleTickerProviderStateMixin {
-  bool _isExpanded = true;
+  bool _isExpanded = false;
   late AnimationController _animationController;
   late Animation<double> _expandAnimation;
 
@@ -274,8 +304,8 @@ class _MealGroupCardState extends State<_MealGroupCard>
       curve: Curves.easeInOut,
     );
 
-    // Начинаем с развернутого состояния
-    _animationController.forward();
+    // Начинаем со свернутого состояния
+    // _animationController.forward(); // Убираем автоматическое разворачивание
   }
 
   @override
@@ -393,16 +423,38 @@ class _MealGroupCardState extends State<_MealGroupCard>
   }
 }
 
-class _CartItemCard extends StatefulWidget {
+class _CartItemCard extends StatelessWidget {
   final CartItem item;
 
   const _CartItemCard({required this.item});
 
   @override
-  State<_CartItemCard> createState() => _CartItemCardState();
+  Widget build(BuildContext context) {
+    return BlocBuilder<CartBloc, CartState>(
+      builder: (context, state) {
+        CartItem currentItem = item;
+        if (state is CartLoaded) {
+          final updatedItem = state.cart.getItemById(item.id);
+          if (updatedItem != null) {
+            currentItem = updatedItem;
+          }
+        }
+        return _CartItemCardContent(item: currentItem);
+      },
+    );
+  }
 }
 
-class _CartItemCardState extends State<_CartItemCard>
+class _CartItemCardContent extends StatefulWidget {
+  final CartItem item;
+
+  const _CartItemCardContent({required this.item});
+
+  @override
+  State<_CartItemCardContent> createState() => _CartItemCardContentState();
+}
+
+class _CartItemCardContentState extends State<_CartItemCardContent>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
@@ -552,6 +604,9 @@ class _CartItemCardState extends State<_CartItemCard>
                 Checkbox(
                   value: widget.item.isPurchased,
                   onChanged: (value) {
+                    talker.info(
+                      '🔘 Checkbox clicked for item: ${widget.item.id}, current value: ${widget.item.isPurchased}',
+                    );
                     context.read<CartBloc>().add(
                       ToggleItemPurchased(widget.item.id),
                     );

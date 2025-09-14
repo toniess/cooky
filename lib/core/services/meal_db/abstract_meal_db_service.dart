@@ -1,6 +1,7 @@
 import 'package:cooky/core/models/models.dart';
 
 abstract class AbstractMealDbService {
+  Future<List<Meal>> latestRecipes();
   Future<List<Meal>> randomSelection();
   Future<List<Meal>> searchMealsByName(String name);
   Future<List<MealShort>> getFilteredRecipes({

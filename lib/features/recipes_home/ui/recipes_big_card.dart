@@ -1,8 +1,9 @@
 import 'package:cooky/core/models/meal.dart';
-import 'package:cooky/core/services/favorites/favorites.dart';
-import 'package:cooky/main.dart';
+import 'package:cooky/core/utils/navigation_helper.dart';
+import 'package:cooky/features/favorites/bloc/bloc.dart';
 import 'package:cooky/theme/colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class RecipeBigCard extends StatelessWidget {
@@ -12,7 +13,8 @@ class RecipeBigCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.go('/recipes/${meal.id}'),
+      onTap: () =>
+          context.push(NavigationHelper.getRecipePath(context, meal.id)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: _buildCardContentTest1(context),
@@ -175,109 +177,82 @@ class _FavoriteButton extends StatefulWidget {
 }
 
 class _FavoriteButtonState extends State<_FavoriteButton> {
-  final _favoritesService = getIt<AbstractFavoritesService>();
-  bool _isFavorite = false;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _checkFavoriteStatus();
+    // Загружаем избранные при инициализации
+    context.read<FavoritesBloc>().add(LoadFavorites());
   }
 
-  @override
-  void didUpdateWidget(covariant _FavoriteButton oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.meal.id != widget.meal.id) {
-      _checkFavoriteStatus();
-    }
-  }
-
-  Future<void> _checkFavoriteStatus() async {
-    try {
-      final isFavorite = await _favoritesService.isFavorite(widget.meal.id);
-      if (mounted) {
-        setState(() {
-          _isFavorite = isFavorite;
-        });
-      }
-    } catch (e) {
-      // Обработка ошибки
-    }
-  }
-
-  Future<void> _toggleFavorite() async {
+  void _toggleFavorite(bool isFavorite) {
     if (_isLoading) return;
 
     setState(() {
       _isLoading = true;
     });
 
-    try {
-      if (_isFavorite) {
-        await _favoritesService.removeFromFavorites(widget.meal.id);
-      } else {
-        await _favoritesService.addToFavorites(widget.meal);
-      }
-
-      if (mounted) {
-        setState(() {
-          _isFavorite = !_isFavorite;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        // Показать ошибку пользователю
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e'), backgroundColor: Colors.red),
-        );
-      }
+    if (isFavorite) {
+      context.read<FavoritesBloc>().add(RemoveFromFavorites(widget.meal.id));
+    } else {
+      context.read<FavoritesBloc>().add(AddToFavorites(widget.meal));
     }
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _toggleFavorite,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey.withValues(alpha: 0.0),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.4),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
-        ),
-        child: _isLoading
-            ? const SizedBox(
-                width: 30,
-                height: 30,
-                child: Center(
-                  child: SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  ),
+    return BlocBuilder<FavoritesBloc, FavoritesState>(
+      builder: (context, state) {
+        bool isFavorite = false;
+
+        if (state is FavoritesLoaded) {
+          isFavorite = state.favoriteStatus[widget.meal.id] ?? false;
+        }
+
+        return GestureDetector(
+          onTap: () => _toggleFavorite(isFavorite),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.withValues(alpha: 0.0),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, -5),
                 ),
-              )
-            : Icon(
-                _isFavorite ? Icons.favorite : Icons.favorite_border,
-                size: 30,
-                color: _isFavorite
-                    ? AppColors.errorRed
-                    : Colors.white.withValues(alpha: 0.7),
-              ),
-      ),
+              ],
+            ),
+            child: _isLoading
+                ? const SizedBox(
+                    width: 30,
+                    height: 30,
+                    child: Center(
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  )
+                : Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    size: 30,
+                    color: isFavorite
+                        ? AppColors.errorRed
+                        : Colors.white.withValues(alpha: 0.7),
+                  ),
+          ),
+        );
+      },
     );
   }
 }
