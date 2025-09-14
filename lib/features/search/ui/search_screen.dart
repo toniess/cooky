@@ -1,10 +1,11 @@
 import 'dart:async';
 
-import 'package:cooky/features/filters/filters.dart';
-import 'package:cooky/features/recipes_home/bloc/recipes/recipes_bloc.dart';
-import 'package:cooky/features/recipes_home/bloc/recipes/recipes_event.dart';
-import 'package:cooky/features/recipes_home/bloc/recipes/recipes_state.dart';
-import 'package:cooky/features/recipes_home/ui/recipes_big_card.dart';
+import 'package:cooky/core/models/meal.dart';
+import 'package:cooky/features/recipe/ui/recepes_mini_card.dart';
+import 'package:cooky/features/search/bloc/search_bloc.dart';
+import 'package:cooky/features/search/bloc/search_event.dart';
+import 'package:cooky/features/search/bloc/search_state.dart';
+import 'package:cooky/features/search/ui/filters_screen.dart';
 import 'package:cooky/theme/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -27,6 +28,30 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
+  SearchFilters _getCurrentFilters(SearchState currentState) {
+    if (currentState is SearchResults) {
+      return currentState.filters;
+    } else if (currentState is SearchEmpty) {
+      return currentState.filters;
+    }
+    return const SearchFilters();
+  }
+
+  void _showFiltersScreen(BuildContext context, SearchState currentState) {
+    final currentFilters = _getCurrentFilters(currentState);
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => FiltersScreen(
+          initialFilters: currentFilters,
+          onFiltersChanged: (newFilters) {
+            context.read<SearchBloc>().add(SearchFiltersChanged(newFilters));
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,6 +67,40 @@ class _SearchScreenState extends State<SearchScreen> {
         foregroundColor: AppColors.neutralGrayDark,
         centerTitle: true,
         elevation: 0,
+        actions: [
+          // Filters button
+          BlocBuilder<SearchBloc, SearchState>(
+            builder: (context, state) {
+              final hasActiveFilters = state is SearchResults
+                  ? state.filters.hasActiveFilters
+                  : state is SearchEmpty
+                  ? state.filters.hasActiveFilters
+                  : false;
+
+              return IconButton(
+                icon: Stack(
+                  children: [
+                    const Icon(Icons.filter_list),
+                    if (hasActiveFilters)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: AppColors.accentBrown,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                onPressed: () => _showFiltersScreen(context, state),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -57,7 +116,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   horizontal: 16,
                   vertical: 12,
                 ),
-                hintText: 'Search for recipes...',
+                hintText: 'Search recipes...',
                 hintStyle: TextStyle(color: AppColors.neutralGrayMedium),
                 prefixIcon: Icon(
                   Icons.search,
@@ -72,7 +131,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         onPressed: () {
                           _searchController.clear();
                           setState(() {});
-                          context.read<RecipesBloc>().add(RecipesClearSearch());
+                          context.read<SearchBloc>().add(SearchCleared());
                         },
                       )
                     : null,
@@ -88,38 +147,27 @@ class _SearchScreenState extends State<SearchScreen> {
                 _debounceTimer?.cancel();
                 _debounceTimer = Timer(const Duration(milliseconds: 500), () {
                   if (query.trim().isEmpty) {
-                    context.read<RecipesBloc>().add(RecipesClearSearch());
+                    context.read<SearchBloc>().add(SearchCleared());
                   } else {
-                    context.read<RecipesBloc>().add(RecipesSearch(query));
+                    context.read<SearchBloc>().add(SearchQueryChanged(query));
                   }
                 });
               },
             ),
           ),
-          // Filters section
-          const FiltersSection(),
           // Search results
           Expanded(
-            child: BlocBuilder<RecipesBloc, RecipesState>(
+            child: BlocBuilder<SearchBloc, SearchState>(
               builder: (context, state) {
-                if (state.isSearching) {
+                if (state is SearchLoading) {
                   return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(color: AppColors.accentBrown),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Searching for "${state.searchQuery}"...',
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(color: AppColors.neutralGrayMedium),
-                        ),
-                      ],
+                    child: CircularProgressIndicator(
+                      color: AppColors.accentBrown,
                     ),
                   );
                 }
 
-                if (state is RecipesSearchResults && state.recipes.isEmpty) {
+                if (state is SearchEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -137,7 +185,7 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Try searching for something else',
+                          'Try changing your search query or filters',
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(color: AppColors.neutralGrayMedium),
                         ),
@@ -146,44 +194,101 @@ class _SearchScreenState extends State<SearchScreen> {
                   );
                 }
 
-                if (state is RecipesSearchResults) {
-                  return ListView.builder(
+                if (state is SearchError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: AppColors.neutralGrayMedium,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Search Error',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(color: AppColors.neutralGrayDark),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          state.message,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.neutralGrayMedium),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                if (state is SearchResults) {
+                  return GridView.builder(
                     padding: const EdgeInsets.all(16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 0.9,
+                        ),
                     itemCount: state.recipes.length,
                     itemBuilder: (context, index) {
                       final meal = state.recipes[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: RecipeBigCard(meal: meal),
+                      final mealShort = MealShort(
+                        id: meal.id,
+                        name: meal.name,
+                        thumbnail: meal.thumbnail,
                       );
+                      return RecepesMiniCard(meal: mealShort);
                     },
                   );
                 }
 
                 // Initial state - show search hint
                 return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.search,
-                        size: 64,
-                        color: AppColors.neutralGrayMedium,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Search for recipes',
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(color: AppColors.neutralGrayDark),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Enter a recipe name to get started',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.search,
+                          size: 64,
                           color: AppColors.neutralGrayMedium,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 16),
+                        Text(
+                          'Search Recipes',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(color: AppColors.neutralGrayDark),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Enter your query',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: AppColors.neutralGrayMedium),
+                        ),
+                        const SizedBox(height: 32),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            context.read<SearchBloc>().add(LoadRandomRecipes());
+                          },
+                          icon: const Icon(Icons.shuffle),
+                          label: const Text('Show 10 Random Recipes'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.accentBrown,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },

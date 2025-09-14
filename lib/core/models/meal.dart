@@ -71,8 +71,12 @@ class Meal extends HiveObject {
     );
   }
 
-  static List<Meal> fromJsonList(List<dynamic> jsonList) {
-    return jsonList.map((json) => Meal.fromJson(json)).toList();
+  static List<Meal> fromJsonList(dynamic jsonList) {
+    try {
+      return (jsonList as List).map((json) => Meal.fromJson(json)).toList();
+    } catch (e) {
+      return [];
+    }
   }
 
   // only for poor api, need to improve later

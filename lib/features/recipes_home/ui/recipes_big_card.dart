@@ -182,8 +182,8 @@ class _FavoriteButtonState extends State<_FavoriteButton> {
   @override
   void initState() {
     super.initState();
-    // Загружаем избранные при инициализации
-    context.read<FavoritesBloc>().add(LoadFavorites());
+    // Убираем автоматическую загрузку избранного при инициализации
+    // Загрузка будет происходить через BlocBuilder
   }
 
   void _toggleFavorite(bool isFavorite) {

@@ -14,6 +14,8 @@ abstract class AbstractMealDbService {
   Future<Meal?> lookupMealById(String id);
   Future<List<Category>> getCategories();
   Future<List<Area>> getAreas();
+  Future<List<Ingredient>> getIngredients();
   Future<List<Meal>> filterByCategory(Category category);
   Future<List<Meal>> filterByArea(Area area);
+  Future<List<Meal>> filterByIngredient(List<Ingredient> ingredients);
 }
