@@ -91,7 +91,8 @@ class MealDbService implements AbstractMealDbService {
   }
 
   /// List all Ingredients
-  Future<List<Ingredient>> listIngredients() async {
+  @override
+  Future<List<Ingredient>> getIngredients() async {
     final response = await _dio.get(
       '$baseUrl/list.php',
       queryParameters: {'i': 'list'},
@@ -99,7 +100,14 @@ class MealDbService implements AbstractMealDbService {
     return Ingredient.fromJsonList(response.data['meals']);
   }
 
+  /// List all Ingredients (deprecated)
+  @Deprecated('Use getIngredients instead')
+  Future<List<Ingredient>> listIngredients() async {
+    return getIngredients();
+  }
+
   /// Filter by ingredients
+  @override
   Future<List<Meal>> filterByIngredient(List<Ingredient> ingredients) async {
     final ingredientsQuery = ingredients.map((e) => e.name).join(',');
     final response = await _dio.get(

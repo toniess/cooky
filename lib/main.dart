@@ -6,6 +6,7 @@ import 'package:cooky/core/services/meal_db/meal_db_service.dart';
 import 'package:cooky/features/cart/bloc/bloc.dart';
 import 'package:cooky/features/favorites/bloc/bloc.dart';
 import 'package:cooky/features/recipes_home/bloc/recipes/recipes_bloc.dart';
+import 'package:cooky/features/search/bloc/search_bloc.dart';
 import 'package:cooky/router/router.dart';
 import 'package:cooky/theme/colors.dart';
 import 'package:dio/dio.dart';
@@ -75,6 +76,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (context) => CartBloc(getIt<AbstractCartService>()),
         ),
+        BlocProvider(create: (context) => SearchBloc()),
       ],
       child: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle(

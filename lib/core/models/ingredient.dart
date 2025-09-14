@@ -11,6 +11,8 @@ class Ingredient {
     this.type,
   });
 
+  Ingredient.named(this.name) : id = '0', description = '', type = '';
+
   factory Ingredient.fromJson(Map<String, dynamic> json) {
     return Ingredient(
       id: json['idIngredient'] as String,

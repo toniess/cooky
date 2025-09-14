@@ -27,8 +27,7 @@ class _FavoritesViewState extends State<_FavoritesView> {
   @override
   void initState() {
     super.initState();
-    // Загружаем избранные при первом открытии экрана
-    context.read<FavoritesBloc>().add(LoadFavorites());
+    // Избранное уже загружается в MainNavigationShell
   }
 
   @override
