@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cooky/core/models/meal.dart';
 import 'package:cooky/core/services/favorites/abstract_favorites_service.dart';
 import 'package:cooky/main.dart';
@@ -118,7 +119,10 @@ class _RecipeAppBarState extends State<RecipeAppBar> {
         background: Stack(
           fit: StackFit.expand,
           children: [
-            Image.network(widget.meal.thumbnail, fit: BoxFit.cover),
+            CachedNetworkImage(
+              imageUrl: widget.meal.thumbnail,
+              fit: BoxFit.cover,
+            ),
             // Градиент поверх изображения
             Container(
               decoration: BoxDecoration(

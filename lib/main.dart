@@ -3,6 +3,7 @@ import 'package:cooky/core/services/cart/cart_service.dart';
 import 'package:cooky/core/services/favorites/favorites.dart';
 import 'package:cooky/core/services/meal_db/abstract_meal_db_service.dart';
 import 'package:cooky/core/services/meal_db/meal_db_service.dart';
+import 'package:cooky/core/utils/image_cache_config.dart';
 import 'package:cooky/features/cart/bloc/bloc.dart';
 import 'package:cooky/features/favorites/bloc/bloc.dart';
 import 'package:cooky/features/recipes_home/bloc/recipes/recipes_bloc.dart';
@@ -56,6 +57,9 @@ void main() async {
   // Инициализация сервисов
   await getIt<AbstractFavoritesService>().init();
   await getIt<AbstractCartService>().init();
+
+  // Инициализация настроек кеша изображений
+  ImageCacheConfig.initialize();
 
   Bloc.observer = TalkerBlocObserver(talker: talker);
 

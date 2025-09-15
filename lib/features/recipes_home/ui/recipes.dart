@@ -69,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
           recipesBloc.add(RecipesRefresh());
         },
         child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           controller: _scrollController,
           slivers: [
             // Featured recipes section
