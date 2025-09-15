@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cooky/core/models/meal.dart';
 import 'package:cooky/core/utils/navigation_helper.dart';
 import 'package:cooky/features/favorites/bloc/bloc.dart';
@@ -24,12 +25,6 @@ class _FavoritesView extends StatefulWidget {
 }
 
 class _FavoritesViewState extends State<_FavoritesView> {
-  @override
-  void initState() {
-    super.initState();
-    // Избранное уже загружается в MainNavigationShell
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -188,12 +183,48 @@ class _FavoritesList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
+    return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: favorites.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
         final meal = favorites[index];
-        return _FavoriteCard(meal: meal);
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Dismissible(
+            key: ValueKey(meal.id),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20),
+              color: Colors.red,
+              child: const Icon(Icons.delete, color: Colors.white, size: 24),
+            ),
+            confirmDismiss: (direction) async {
+              return await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Remove from Favorites'),
+                  content: Text('Remove "${meal.name}" from favorites?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('Remove'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            onDismissed: (direction) {
+              context.read<FavoritesBloc>().add(RemoveFromFavorites(meal.id));
+            },
+            child: _FavoriteCard(meal: meal),
+          ),
+        );
       },
     );
   }
@@ -247,10 +278,9 @@ class _FavoriteCardState extends State<_FavoriteCard>
           scale: _scaleAnimation.value,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 300),
-            margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.1),
@@ -272,42 +302,37 @@ class _FavoriteCardState extends State<_FavoriteCard>
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          widget.meal.thumbnail,
+                        child: CachedNetworkImage(
+                          imageUrl: widget.meal.thumbnail,
                           width: 80,
                           height: 80,
                           fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: AppColors.neutralGrayLight,
-                                borderRadius: BorderRadius.circular(8),
+                          placeholder: (context, url) => Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: AppColors.neutralGrayLight,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.accentBrown,
+                                strokeWidth: 2,
                               ),
-                              child: const Center(
-                                child: CircularProgressIndicator(
-                                  color: AppColors.accentBrown,
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: AppColors.neutralGrayLight,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.image_not_supported,
-                                color: AppColors.neutralGrayMedium,
-                              ),
-                            );
-                          },
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: AppColors.neutralGrayLight,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.image_not_supported,
+                              color: AppColors.neutralGrayMedium,
+                            ),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 16),

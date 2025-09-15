@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cooky/core/models/meal.dart';
 import 'package:cooky/core/utils/navigation_helper.dart';
 import 'package:cooky/features/favorites/bloc/bloc.dart';
@@ -45,18 +46,15 @@ class RecipeBigCard extends StatelessWidget {
             child: Stack(
               children: [
                 Positioned.fill(
-                  child: Image.network(
-                    meal.thumbnail,
+                  child: CachedNetworkImage(
+                    imageUrl: meal.thumbnail,
                     fit: BoxFit.cover,
                     alignment: Alignment.center,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.neutralGrayLight,
-                        ),
-                      );
-                    },
+                    placeholder: (context, url) => Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.neutralGrayLight,
+                      ),
+                    ),
                   ),
                 ),
                 Positioned(
@@ -107,17 +105,14 @@ class RecipeBigCard extends StatelessWidget {
     return Stack(
       children: [
         Positioned.fill(
-          child: Image.network(
-            meal.thumbnail,
+          child: CachedNetworkImage(
+            imageUrl: meal.thumbnail,
             fit: BoxFit.cover,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.neutralGrayLight,
-                ),
-              );
-            },
+            placeholder: (context, url) => Center(
+              child: CircularProgressIndicator(
+                color: AppColors.neutralGrayLight,
+              ),
+            ),
           ),
         ),
         Positioned.fill(

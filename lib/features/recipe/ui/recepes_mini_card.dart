@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cooky/core/models/meal.dart';
 import 'package:cooky/core/utils/navigation_helper.dart';
 import 'package:cooky/theme/colors.dart';
@@ -46,20 +47,18 @@ class RecepesMiniCard extends StatelessWidget {
                       topLeft: Radius.circular(16),
                       topRight: Radius.circular(16),
                     ),
-                    child: Image.network(
-                      meal.thumbnail,
+                    child: CachedNetworkImage(
+                      imageUrl: meal.thumbnail,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: AppColors.fieldBackground,
-                          child: const Icon(
-                            Icons.restaurant,
-                            color: Colors.grey,
-                            size: 40,
-                          ),
-                        );
-                      },
+                      errorWidget: (context, url, error) => Container(
+                        color: AppColors.fieldBackground,
+                        child: const Icon(
+                          Icons.restaurant,
+                          color: Colors.grey,
+                          size: 40,
+                        ),
+                      ),
                     ),
                   ),
                   // Градиентный оверлей
